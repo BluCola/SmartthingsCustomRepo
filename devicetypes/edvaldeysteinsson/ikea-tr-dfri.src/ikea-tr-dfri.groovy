@@ -14,6 +14,7 @@
  *
  *  Author: Edvald Eysteinsson
  *  Date: 2017-03-18
+ *  Uploaded: 2017-04-19
  */
 metadata {
   definition (name: "IKEA Trådfri", namespace: "edvaldeysteinsson", author: "Edvald Eysteinsson") {
