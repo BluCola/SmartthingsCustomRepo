@@ -23,12 +23,22 @@ metadata {
         
         command "adjustLevel"
         command "adjustColorTemp"
+        command "setColorName"
+    	command "setColorRelax"
+    	command "setColorEveryday"
+    	command "setColorFocus"
+    	command "nextColor"
         
         attribute "onPercentage", "number"
         attribute "levelSync", "string"
         attribute "colorTempSync", "string"
 	}
 
+  preferences {
+    input name: "colorTempMin", type: "number", title: "Color temperature at lowest level(1%)", defaultValue: 2200, range: "2200..6500", displayDuringSetup: true, required: false
+    input name: "colorTempMax", type: "number", title: "Color temperature at highest level(100%)", defaultValue: 4000, range: "2200..6500", displayDuringSetup: true, required: false
+  }
+  
 	simulator {
 		// TODO: define status and reply messages here
 	}
@@ -77,8 +87,12 @@ metadata {
             state "default", label:"Temp", unit:"", icon: "st.illuminance.illuminance.bright"
         }
         
-        controlTile("colorTempSliderControl", "device.colorTemperature", "slider", height: 1, width: 3, inactiveLabel: false, range:"(2000..6500)") {
+        controlTile("colorTempSliderControl", "device.colorTemperature", "slider", height: 1, width: 2, inactiveLabel: false, range:"(2200..4000)") {
             state "level", action:"color temperature.setColorTemperature"
+        }
+        
+        standardTile("nextColor", "device.default", inactiveLabel: false, decoration: "flat", width: 1, height: 1) {
+          state "default", label:"", action:"nextColor", icon:"https://github.com/edvaldeysteinsson/SmartThingsResources/raw/master/images/next_color.png"
         }
         
         valueTile("colorTempValue", "device.colorTemperature", inactiveLabel: true, height:1, width:1, decoration: "flat") {
@@ -89,10 +103,22 @@ metadata {
             state "default", label:' Sync ', unit:"", action: "adjustColorTemp", backgroundColor: "#ff9900"
             state "ok", label:'', unit:"", backgroundColor: "#00b509"
         }
+
+		standardTile("colorRelax", "device.default", inactiveLabel: false, width: 2, height: 2) {
+          state "default", label:"", action:"setColorRelax", backgroundColor:"#ECCF73"
+        }
+
+        standardTile("colorEveryday", "device.default", inactiveLabel: false, width: 2, height: 2) {
+          state "default", label:"", action:"setColorEveryday", backgroundColor:"#FBECCB"
+        }
+
+        standardTile("colorFocus", "device.default", inactiveLabel: false, width: 2, height: 2) {
+          state "default", label:"", action:"setColorFocus", backgroundColor:"#F5FBFB"
+        }
 	}
     
     main "switch"
-    details(["switch", "levelLabel", "levelSliderControl", "levelValue", "levelSync", "colorTempLabel", "colorTempSliderControl", "colorTempValue", "colorTempSync"])
+    details(["switch", "levelLabel", "levelSliderControl", "levelValue", "levelSync", "colorTempLabel", "colorTempSliderControl", "nextColor", "colorTempValue", "colorTempSync", "colorRelax", "colorEveryday", "colorFocus"])
 }
 
 def parse(String description) {
@@ -265,6 +291,7 @@ def getAdjustmentLevel(values) {
     return level
 }
 
+
 // COLOR TEMPERATURE
 def setColorTemperature(val){
 	setColorTemperature(val, true)
@@ -273,11 +300,11 @@ def setColorTemperature(val){
 def setColorTemperature(val, triggerGroup) {
 	log.debug "Setting color temperature to $val"
 
-    if (val < 2000)
-    	val = 2000
+    if (val < colorTempMin)
+    	val = colorTempMin
     
-    if( val > 6500)
-    	val = 6500
+    if( val > colorTempMax)
+    	val = colorTempMax
         
     if (triggerGroup)
        on()
@@ -346,4 +373,27 @@ def getAdjustmentColorTemp(values) {
     }
     
     return colorTemp
+}
+
+def setColorRelax() {
+  setColorTemperature(2200)
+}
+
+def setColorEveryday() {
+  setColorTemperature(2700)
+}
+
+def setColorFocus() {
+  setColorTemperature(4000)
+}
+
+def nextColor() {
+  def colorTemp = device.currentValue("colorTemperature")
+  if(colorTemp < 2450) {
+    setColorEveryday()
+  } else if (colorTemp < 2950) {
+    setColorFocus()
+  } else {
+    setColorRelax()
+  }
 }
